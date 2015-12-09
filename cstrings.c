@@ -14,8 +14,8 @@ typedef unsigned int size_t;
 int strlen(const char *str);
 int strcmp(const char *s1, const char *s2);
 int strncmp(const char *str1, const char *str2, size_t n);
-void strcpy(char *s1, const char *s2);
-void strncpy(char *s1, const char *s2, size_t n);
+char* strcpy(char *s1, const char *s2);
+char* strncpy(char *s1, const char *s2, size_t n);
 char* strcat(char *dest, const char *src);
 char* strncat(char *dest, const char *src, size_t n);
 char* strchr(const char *str, int c); /* Searches for the first occurrence of the character c */
@@ -62,64 +62,92 @@ int strcmp(const char *s1, const char *s2) {
 }
 
 int strncmp(const char *s1, const char *s2, size_t n) {
-	while (*s1 && *s2 && n--) {
+	if (n <= 0)
+		return 0;
+
+	while (*s1 && *s2 && n) {
 		if (*s1 > *s2) return 1;
 		if (*s1 < *s2) return -1;
 		s1++;
 		s2++;
+		n--;
 	}
+
+	if (n && *s1 && !*s2)
+		return 1;
+	if (n && !*s1 && *s2)
+		return -1;
+
 	return 0;
 }
 
-void strcpy(char *s1, char *s2) {
+char* strcpy(char *s1, const char *s2) {
+	char *save = s1;
 	while (*s2)
 		*s1++ = *s2++;
+	*s1 = 0;
+	return save;
 }
 
-void strncpy(char *s1, char *s2, size_t n) {
-	while (n) {
+char* strncpy(char *s1, const char *s2, size_t n) {
+	char *save = s1;
+	if (n <= 0) {
+		*s1 = 0;
+		return s1;
+	}
+
+	while (n && *s2) {
 		*s1++ = *s2++;
 		n--;
 	}
 	*s1 = 0;
+	return save;
 }
 
-char *strcat(char *dest, const char *src) {
+char* strcat(char *dest, const char *src) {
 	char *res = dest;
-	while (*dest++) {}
+	while (*dest) dest++;
 	while (*src) *dest++ = *src++;
 	*dest = 0;
 	return res;
 }
 
-char *strncat(char *dest, const char *src, size_t n) {
+char* strncat(char *dest, const char *src, size_t n) {
 	char *res = dest;
-	while (*dest++) {}
+	if (n <= 0)
+		return dest;
+	while (*dest) dest++;
 	while (*src && n--) *dest++ = *src++;
 	*dest = 0;
 	return res;
 }
 
-char *strchr(const char *str, int c) { /* Searches for the first occurrence of the character c */
+char* strchr(const char *str, char c) { /* Searches for the first occurrence of the character c */
 	while (*str) {
-		if (*str == c) return (char*)str;
+		if (*str == c) 
+			return (char*)str;
 		str++;
 	}
 
 	return NULL;
 }
 
-char *strstr(const char *haystack, const char *needle) { /* Finds the first occurrence of the entire string needle */
+char* strstr(const char *haystack, const char *needle) { /* Finds the first occurrence of the entire string needle */
+	if (*needle == 0)
+		return NULL;
+
 	while (*haystack) {
 		const char *hay = haystack;
 		const char *need = needle;
-		while (*need++ == *hay++)
-		{
+		while (*need && *hay == *need) {
+			hay++;
+			need++;
 		}
 		if (*need == 0)
-			break;
+			return (char*)haystack;
+		haystack++;
 	}
-	return (char*)haystack;
+	return NULL;
 }
 
 char* strtoupper(char *str) {
@@ -292,6 +320,10 @@ int test(char * descr, int value) {
 
 int main()
 {
+	char buf1[255] = "";
+	char buf2[255] = "";
+	char buf3[255] = "";
+
 	/*int strlen(const char *str);*/
 
 	test("strlen 1", strlen("Hello") == 5);
@@ -311,6 +343,13 @@ int main()
 
 	/*int strncmp(const char *str1, const char *str2, size_t n);*/
 
+	test("strNcmp 1", strncmp("hello", "hello 2", 5) == 0);
+	test("strNcmp 2", strncmp("", "hello", 0) == 0);
+	test("strNcmp 3", strncmp("hello 2", "hello 2", -1) == 0);
+	test("strNcmp 4", strncmp("hello 2", "hello", 6) == 1);
+	test("strNcmp 5", strncmp("absde", "abrerer", 2) == 0);
+	test("strNcmp 6", strncmp("absde", "", 0) == 0);
+	test("strNcmp 7", strncmp("", "", 1) == 0);
 
 	/*void strcpy(char *s1, const char *s2);*/
 	
@@ -329,11 +368,40 @@ int main()
 											  
 	/*char* strstr(const char *haystack, const char *needle);*/ /* Finds the first occurrence of the entire string needle */
 	
-																
+	test("strstr 1", strcmp(strstr("absde *&#12 fin me 1456 find me", "find me"), "find me") == 0);
+	test("strstr 2", strstr("this is my sample string", "find me") == NULL);
+	test("strstr 3", strstr("this is my sample string", "") == NULL);
+	test("strstr 4", strstr("this is my sample string", "t")[0] == 't');
+	test("strstr 5", strlen(strstr("this is my sample string", "st")) == 6);
+	test("strstr 6", strstr("this is my sample string", " ")[1] == 'i');
+
+	strcpy(buf1, "hello");
+	strcpy(buf2, " world");
+	strcat(buf1, buf2);
+	strncpy(buf3, " test record", 5);
+	strcat(buf1, buf3);
+	test("strstr 7", strcmp(strstr(buf1, "wor"), "world test") == 0);
+
+
 	/*char* strtoupper(char *str);*/
-	
-	
+
+	strcpy(buf1, "abcde");
+	test("strtoupper 1", strcmp(strtoupper(buf1), "ABCDE") == 0);
+	strcpy(buf1, "ABCDE");
+	test("strtoupper 2", strcmp(strtoupper(buf1), "ABCDE") == 0);
+	strcpy(buf1, "ab2DE");
+	test("strtoupper 3", strcmp(strtoupper(buf1), "AB2DE") == 0);
+	test("strtoupper 4", strcmp(strtoupper(""), "") == 0);
+
 	/*char* strtolower(char *str);*/
+
+	strcpy(buf1, "ABCDE");
+	test("strtolower 1", strcmp(strtolower(buf1), "abcde") == 0);
+	strcpy(buf1, "abcde");
+	test("strtolower 2", strcmp(strtolower(buf1), "abcde") == 0);
+	strcpy(buf1, "ab2DE");
+	test("strtolower 3", strcmp(strtolower(buf1), "ab2de") == 0);
+	test("strtolower 4", strcmp(strtolower(""), "") == 0);
 
 
 
