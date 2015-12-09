@@ -194,8 +194,11 @@ char* strcutch(char *str, char c) { /* cuts all occurrences of character 'c'from
 	return save;
 }
 
+#define STR_MAX_LEN 2048
+
 char* strreplace(char *str, const char *from, const char *to) { /* replaces all occurrences of 'from' with 'to' in 'str' */
-	char *newstr = str;
+	char buf[STR_MAX_LEN + 1];
+	char *newstr = buf;
 	char *oldstr = str;
 
 	if (*str == 0 || *from == 0)
@@ -222,6 +225,8 @@ char* strreplace(char *str, const char *from, const char *to) { /* replaces all 
 		}
 	}
 	*newstr = 0;
+	strcpy(str, buf);
+
 	return str;
 }
 
@@ -250,22 +255,21 @@ char* strtrim(char *str) { /* removes whitespaces */
 
 char* strrtrim(char *str) { /* removes whitespaces on the right */
 	char *tmp = str;
+
 	if (*str == 0)
 		return str;
+
 	while (*tmp)
 		tmp++;
-	while (1) {
-		if (iswhitespace(*--tmp)) {
-			if (tmp == str) {
-				*tmp = 0;
-				break;
-			}
-		}
-		else {
-			tmp[1] = 0;
+
+	while (iswhitespace(*--tmp)) {
+		if (tmp == str) {
+			*tmp = 0;
 			break;
 		}
 	}
+	tmp[1] = 0;
+
 	return str;
 }
 
@@ -273,20 +277,29 @@ char* strltrim(char *str) { /* removes whitespaces on the left */
 	char *save = str;
 	char *from = str;
 	char *to = str;
-	while (*from) {
-		if (iswhitespace(*from))
-			from++;
-		else
-			*to++ = *from++;
-	}
+
+	if (str == NULL || *str == 0)
+		return str;
+
+	while (iswhitespace(*from))
+		from++;
+
+	while (*from)
+		*to++ = *from++;
 	*to = 0;
+
 	return save;
 }
 
-char* strcompact(char *str) { /* reduces whilespace sequences inside string */
+char* strcompact(char *str) { /* trims and reduces whilespace sequences inside string */
 	char *from = str;
 	char *to = str;
 	int ws = 0;
+
+	if (str == NULL || *str == 0)
+		return str;
+
+	str = strtrim(str);
 
 	while (*from) {
 		if (iswhitespace(*from)) {
@@ -297,10 +310,13 @@ char* strcompact(char *str) { /* reduces whilespace sequences inside string */
 				ws = 1;
 			}
 		}
-		else
+		else {
 			*to++ = *from++;
+			ws = 0;
+		}
 	}
 	*to = 0;
+
 	return str;
 }
 
@@ -450,23 +466,84 @@ int main()
 	strreplace(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd", "");
 	test("strreplace 7", strcmp(buf1, "") == 0);
 
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 string878 kjlasd string989 sd sdasdstring");
+	strreplace(buf1, "string", "ttt");
+	test("strreplace 8", strcmp(buf1, "sample 123 ttt &#^EBJKHSDUHK8 ttt878 kjlasd ttt989 sd sdasdttt") == 0);
 
-	printf("\n\n%s\n\n", buf1);
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 string878 kjlasd string989 sd sdasdstring");
+	strreplace(buf1, "string", "");
+	test("strreplace 9", strcmp(buf1, "sample 123  &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd") == 0);
+
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 string878 kjlasd string989 sd sdasdstring");
+	strreplace(buf1, "hello", "");
+	test("strreplace 10", strcmp(buf1, "sample 123 string &#^EBJKHSDUHK8 string878 kjlasd string989 sd sdasdstring") == 0);
+
+	strcpy(buf1, "sssssample 123 sstring &#^EBJKHSDUHK8 string878 kjlasd string989 sd sdasdstringss");
+	strreplace(buf1, "s", "mm");
+	test("strreplace 11", strcmp(buf1, "mmmmmmmmmmample 123 mmmmtring &#^EBJKHSDUHK8 mmtring878 kjlammd mmtring989 mmd mmdammdmmtringmmmm") == 0);
+
+	strcpy(buf1, "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
+	strreplace(buf1, "h", "");
+	test("strreplace 12", strcmp(buf1, "") == 0);
+
+	strcpy(buf1, "h");
+	strreplace(buf1, "h", "t");
+	test("strreplace 13", strcmp(buf1, "t") == 0);
+
+	strcpy(buf1, "h");
+	strreplace(buf1, "h", "");
+	test("strreplace 14", strcmp(buf1, "") == 0);
+
+	strcpy(buf1,                       "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
+	strreplace(buf1, "h", "tt");
+	test("strreplace 15", strcmp(buf1, "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt") == 0);
 
 	/*char* strrev(char *str);*/ /* reverses the string */
 
+	strcpy(buf1, "123456789");
+	test("strrev 1", strcmp(strrev(buf1), "987654321") == 0);
+
+	strcpy(buf1, "1 2 3 4 5 6 7 8 9 ");
+	test("strrev 2", strcmp(strrev(buf1), " 9 8 7 6 5 4 3 2 1") == 0);
+
+	strcpy(buf1, "1");
+	test("strrev 3", strcmp(strrev(buf1), "1") == 0);
+
+	strcpy(buf1, "");
+	test("strrev 4", strcmp(strrev(buf1), "") == 0);
 
 	/*char* strtrim(char *str);*/ /* removes whitespaces */
-
-
-	/*char* strrtrim(char *str);*/ /* removes whitespaces on the right */
-
-
+    /*char* strrtrim(char *str);*/ /* removes whitespaces on the right */
 	/*char* strltrim(char *str);*/ /* removes whitespaces on the left */
 
+	strcpy(buf1, "  dsdsd sdsds   dsds    ");
+	test("strtrim 1", strcmp(strtrim(buf1), "dsdsd sdsds   dsds") == 0);
+
+	strcpy(buf1, "  dsdsd sdsds   dsds    ");
+	test("strtrim 2", strcmp(strrtrim(buf1), "  dsdsd sdsds   dsds") == 0);
+
+	strcpy(buf1, "  dsdsd sdsds   dsds    ");
+	test("strtrim 3", strcmp(strltrim(buf1), "dsdsd sdsds   dsds    ") == 0);
+
+	strcpy(buf1, "   ");
+	test("strtrim 4", strcmp(strtrim(buf1), "") == 0);
+
+	strcpy(buf1, "");
+	test("strtrim 5", strcmp(strtrim(buf1), "") == 0);
 
 	/*char* strcompact(char *str);*/ /* reduces whilespace sequences inside string */
 
+	strcpy(buf1, "  dsdsd  sdsds   dsds    ");
+	test("strcompact 1", strcmp(strcompact(buf1), "dsdsd sdsds dsds") == 0);
+
+	strcpy(buf1, "     ");
+	test("strcompact 2", strcmp(strcompact(buf1), "") == 0);
+
+	strcpy(buf1, "");
+	test("strcompact 3", strcmp(strcompact(buf1), "") == 0);
+
+	strcpy(buf1, "\t\t\t\t\t\n\n\n\t\t");
+	test("strcompact 4", strcmp(strcompact(buf1), "") == 0);
 
 
 	printf("\nTesting summary:\n");
