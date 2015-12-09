@@ -183,7 +183,7 @@ char* strcut(char *from, char *str) { /* cuts str substring out from 'from' */
 char* strcutch(char *str, char c) { /* cuts all occurrences of character 'c'from string 'str' */
 	char *save = str;
 	char *from = str;
-	char *to = from;
+	char *to = str;
 	while (*from) {
 		if (*from == c)
 			from++;
@@ -197,7 +197,10 @@ char* strcutch(char *str, char c) { /* cuts all occurrences of character 'c'from
 char* strreplace(char *str, const char *from, const char *to) { /* replaces all occurrences of 'from' with 'to' in 'str' */
 	char *newstr = str;
 	char *oldstr = str;
-	char to_len = strlen(to);
+
+	if (*str == 0 || *from == 0)
+		return str;
+
 	while (*oldstr) {
 		const char *fromtmp = from;
 		char *oldtmp = oldstr;
@@ -205,15 +208,20 @@ char* strreplace(char *str, const char *from, const char *to) { /* replaces all 
 			oldtmp++;
 			fromtmp++;
 		}
-		if (*fromtmp == 0) { /* 'form' string found */
-			newstr = strcat(newstr, to) + to_len;
+		if (*fromtmp == 0) { /* 'from' string found */
+			char *totmp = (char *)to;
+			while (*totmp) {
+				*newstr++ = *totmp++;
+			}
+			oldstr = oldtmp;
 		}
 		else { /* not found */
 			do {
 				*newstr++ = *oldstr++;
-			} while (oldstr != oldtmp);
+			} while (oldstr <= oldtmp);
 		}
 	}
+	*newstr = 0;
 	return str;
 }
 
@@ -402,6 +410,62 @@ int main()
 	strcpy(buf1, "ab2DE");
 	test("strtolower 3", strcmp(strtolower(buf1), "ab2de") == 0);
 	test("strtolower 4", strcmp(strtolower(""), "") == 0);
+
+	/*char* strcutch(char *from, char c);*/ /* cuts all occurrences of character 'c'from string 'from' */
+											
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd");
+	strcutch(buf1, 's');
+	test("strcutch 1", strcmp(buf1, "ample 123 tring &#^EBJKHSDUHK8 878 kjlad 989 d dad") == 0);
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd");
+	strcutch(buf1, ' ');
+	test("strcutch 2", strcmp(buf1, "sample123string&#^EBJKHSDUHK8878kjlasd989sdsdasd") == 0);
+											 
+	/*char* strcut(char *from, char *str);*/ /* cuts str substring out from 'from' */
+    /*char* strreplace(char *str, const char *from, const char *to);*/ /* replaces all occurrences of 'from' with 'to' in 'str' */
+
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd");
+	strreplace(buf1, "string", "pepper");
+	test("strreplace 1", strcmp(buf1, "sample 123 pepper &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd") == 0);
+
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd");
+	strreplace(buf1, "string", "");
+	test("strreplace 2", strcmp(buf1, "sample 123  &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd") == 0);
+
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd");
+	strreplace(buf1, "&#^EBJKHSDUHK8 878 kjlasd", "hi");
+	test("strreplace 3", strcmp(buf1, "sample 123 string hi 989 sd sdasd") == 0);
+
+	strcpy(buf1, "");
+	test("strreplace 4", strreplace(buf1, "&#^EBJKHSDUHK8 878 kjlasd", "hi")[0] == 0);
+
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd");
+	strreplace(buf1, "&#^EBJKHSDUHK8", "sample");
+	test("strreplace 5", strcmp(buf1, "sample 123 string sample 878 kjlasd 989 sd sdasd") == 0);
+
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd");
+	strreplace(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd", "kuku");
+	test("strreplace 6", strcmp(buf1, "kuku") == 0);
+
+	strcpy(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd");
+	strreplace(buf1, "sample 123 string &#^EBJKHSDUHK8 878 kjlasd 989 sd sdasd", "");
+	test("strreplace 7", strcmp(buf1, "") == 0);
+
+
+	printf("\n\n%s\n\n", buf1);
+
+	/*char* strrev(char *str);*/ /* reverses the string */
+
+
+	/*char* strtrim(char *str);*/ /* removes whitespaces */
+
+
+	/*char* strrtrim(char *str);*/ /* removes whitespaces on the right */
+
+
+	/*char* strltrim(char *str);*/ /* removes whitespaces on the left */
+
+
+	/*char* strcompact(char *str);*/ /* reduces whilespace sequences inside string */
 
 
 
